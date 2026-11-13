@@ -479,7 +479,7 @@ function buildSrc(){if(pdf)pdf.src=dilateArr(pdf.alpha,pdf.wpx,pdf.hpx,thick);}
 function sizeCanvas(){
   /* resolução real da tela (sem limitar a 2x), para a imagem nunca ser esticada pelo navegador */
   ratio=Math.max(1,Math.min(window.devicePixelRatio||1,4));
-  while(ratio>1&&innerWidth*ratio*innerHeight*ratio>9.5e6)ratio-=.25;
+  while(ratio>1&&innerWidth*ratio*innerHeight*ratio>6e6)ratio-=.25;
   scr.width=Math.round(innerWidth*ratio);scr.height=Math.round(innerHeight*ratio);
   var inf=$('#resInfo');
   if(inf)inf.textContent='Resolução desenhada: '+scr.width+' × '+scr.height+' px';
@@ -494,7 +494,7 @@ var drawId=0;
 function draw(fast){
   var id=++drawId,ctx=scr.getContext('2d');
   if(!pdf||!pdf.src||!Hinv){ctx.clearRect(0,0,scr.width,scr.height);return;}
-  var R=ratio,cw=pdf.cw,ch=pdf.ch,pm=pdf.pxmm,wp=pdf.wpx,hp=pdf.hpx,src=pdf.src;
+  var Rfull=ratio,R=Rfull,f=1,cw=pdf.cw,ch=pdf.ch,pm=pdf.pxmm,wp=pdf.wpx,hp=pdf.hpx,src=pdf.src;
   var rad=st.rot*Math.PI/180,cr=Math.cos(rad),sr=Math.sin(rad),fx=st.fx,fy=st.fy,tx=st.x,ty=st.y;
   var mirrored=(fx<0)!==(fy<0),hi=Hinv;
   /* retângulo que o molde ocupa na tela */
@@ -506,11 +506,12 @@ function draw(fast){
     if(P[0]<minx)minx=P[0];if(P[0]>maxx)maxx=P[0];if(P[1]<miny)miny=P[1];if(P[1]>maxy)maxy=P[1];
   }
   var W=scr.width,Hh=scr.height;
+  if(fast){var ar=Math.max(1,(maxx-minx)*(maxy-miny)*Rfull*Rfull);f=Math.max(1,Math.sqrt(ar/4e5));if(f>1){R=Rfull/f;W=Math.ceil(W/f);Hh=Math.ceil(Hh/f);}}
   var x0=Math.max(0,Math.floor(minx*R)-2),x1=Math.min(W,Math.ceil(maxx*R)+2);
   var y0=Math.max(0,Math.floor(miny*R)-2),y1=Math.min(Hh,Math.ceil(maxy*R)+2);
   var bw=x1-x0,bh=y1-y0;
-  if(bw<=0||bh<=0){ctx.clearRect(0,0,W,Hh);return;}
-  var N=fast?1:(R>=2?1:(R>=1.5?2:3)),n=N*N,gain=(thick===0?2.4:4),col=hex2(color),br=bright;
+  if(bw<=0||bh<=0){ctx.clearRect(0,0,scr.width,scr.height);return;}
+  var N=fast?1:(R>=2?1:(R>=1.5?2:(bw*bh>1.2e6?2:3))),n=N*N,gain=(thick===0?2.4:4),col=hex2(color),br=bright;
   var img=ctx.createImageData(bw,bh),d=img.data;
   var px,py=y0,sx,sy,cx,cy,w,dx,dy,lx,ly,u,v,iu,iv,fu,fv,i00,i10,i01,i11,sl,so,o,e,gx,gy,dist,la,oa,a,tw,idx,iu1,iv1;
   function row(){
@@ -553,7 +554,8 @@ function draw(fast){
     var tEnd=Date.now()+12;
     while(py<y1&&Date.now()<tEnd){row();py++;}
     if(py<y1){setTimeout(slice,0);}
-    else{ctx.clearRect(0,0,W,Hh);ctx.putImageData(img,x0,y0);}
+    else if(f>1){var tc=document.createElement('canvas');tc.width=bw;tc.height=bh;tc.getContext('2d').putImageData(img,0,0);ctx.clearRect(0,0,scr.width,scr.height);ctx.imageSmoothingEnabled=true;ctx.drawImage(tc,0,0,bw,bh,x0*f,y0*f,bw*f,bh*f);}
+    else{ctx.clearRect(0,0,scr.width,scr.height);ctx.putImageData(img,x0,y0);}
   }
   slice();
 }
