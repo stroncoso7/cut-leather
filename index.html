@@ -235,6 +235,8 @@ body.m-rail #rail{max-height:calc(100% - 180px)}
   <span class="sep"></span>
   <button class="rbtn need" id="railColor" type="button" aria-label="Cor e espessura da linha" title="Cor e espessura da linha"><span class="dot" id="dot"></span><span>Linha</span></button>
   <span class="sep"></span>
+  <button class="rbtn need" id="railClose" type="button" aria-label="Fechar o molde e abrir outro" title="Fechar o molde / abrir outro"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M5 3h8l4 4v12H5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8.5 10.5l5 5M13.5 10.5l-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>Fechar</span></button>
+  <span class="sep"></span>
   <button class="rbtn" id="railHide" type="button" aria-label="Esconder a barra" title="Esconder a barra"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 4l10 10M14 4L4 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Ocultar</span></button>
 </nav>
 <div id="pop" role="dialog" aria-label="Cor e espessura da linha">
@@ -298,6 +300,7 @@ body.m-rail #rail{max-height:calc(100% - 180px)}
         <p>Escolha o molde PDF e confira o quadrado de 5×5 cm projetado. Se necessário, volte e calibre novamente.</p>
         <div class="row">
           <span class="file"><span class="btn" aria-hidden="true">Abrir PDF</span><input id="pdfIn" type="file" accept="application/pdf,.pdf" aria-label="Abrir PDF"></span>
+          <button class="btn ghost" id="closePdf" type="button" style="display:none">Fechar molde</button>
         </div>
         <div class="info" id="pdfInfo" role="status"></div>
       </div>
@@ -598,6 +601,7 @@ function refreshUI(){
     var num=$('.num',li);num.textContent=li.classList.contains('done')?'✓':k;
   });
   $$('.rbtn.need').forEach(function(b){b.disabled=!pdf;});
+  var cb=$('#closePdf');if(cb)cb.style.display=pdf?'':'none';
   if(!pdf)$('#pop').classList.remove('on');
   $('#fl').classList.toggle('on',!!pdf);
   place();
@@ -626,6 +630,18 @@ $('#pdfIn').addEventListener('change',function(e){var f=e.target.files[0];if(f)l
 $('#showPanel').addEventListener('click',function(){setMode('rail')});
 $('#collapseBtn').addEventListener('click',function(){
   try{var de=document.documentElement,fs=de.requestFullscreen||de.webkitRequestFullscreen;var p=fs&&fs.call(de);if(p&&p.catch)p.catch(function(){});}catch(e){}if(pdf)setStep(2);setMode('rail');});
+
+function closePdf(){
+  pdf=null;count=0;$('#cnt').textContent='0';
+  st.x=CAL_W/2;st.y=CAL_H/2;st.rot=0;st.fx=1;st.fy=1;
+  var info=$('#pdfInfo');info.className='info';info.textContent='Molde fechado. Escolha outro PDF; a calibração continua.';
+  $('#pop').classList.remove('on');
+  try{applyPat();}catch(e){}
+  request(false);setStep(2);setMode('open');refreshUI();
+}
+$('#closePdf').addEventListener('click',closePdf);
+$('#railClose').addEventListener('click',closePdf);
+addEventListener('pageshow',function(e){if(e.persisted&&pdf)closePdf();});
 $('#railMenu').addEventListener('click',function(){$('#pop').classList.remove('on');setMode('open');});
 $('#railHide').addEventListener('click',function(){setMode('hidden')});
 $('#railColor').addEventListener('click',function(){if(pdf)$('#pop').classList.toggle('on');});
