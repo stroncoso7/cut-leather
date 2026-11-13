@@ -131,7 +131,7 @@ body.m-rail #rail{top:132px;transform:none;max-height:calc(100% - 142px)}
   background:rgba(20,12,10,.92);color:#fff;font-weight:600;font-size:14px;cursor:pointer}
 #showPanel.on{display:block}
 
-@media (max-width:760px){
+@media (max-width:760px) and (orientation:portrait){
   #panel{left:8px;right:8px;top:auto;bottom:8px;width:auto;max-height:52vh}
 }
 @media (prefers-reduced-motion:no-preference){
@@ -214,7 +214,7 @@ body.m-rail #rail{max-height:calc(100% - 180px)}
 #priv p{margin:0 0 8px}
 .signout{background:none;border:0;padding:0;color:inherit;text-decoration:underline;font:inherit;cursor:pointer}
 </style>
-</head>
+<link rel="icon" href="favicon.ico" sizes="any"><link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png"><link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png"></head>
 <body>
 
 <main id="stage" aria-label="Mesa de corte">
@@ -279,7 +279,7 @@ body.m-rail #rail{max-height:calc(100% - 180px)}
   <h1 class="lead">Corte suas roupas <em>em couro</em> com projeção.</h1>
   <p class="lead2"><mark>Projete o molde PDF em tamanho real sobre a pele.</mark></p>
 
-  <div class="needs"><span class="nt">Você precisa de:</span><span class="chipn">projetor</span><span class="chipn">base de corte</span><span class="chipn">molde PDF</span></div>
+  <div class="needs"><span class="nt">Você precisa de:</span><span class="chipn">notebook ou tablet</span><span class="chipn">projetor</span><span class="chipn">base de corte</span><span class="chipn">molde PDF</span></div>
 
   <ol class="steps" id="steps">
     <li class="step" data-step="1">
@@ -380,11 +380,12 @@ function mapH(h,x,y){var w=h[6]*x+h[7]*y+1;return [(h[0]*x+h[1]*y+h[2])/w,(h[3]*
 
 var quad=null,H=null,Hinv=null,activeCorner=0,userCal=false;
 
+function narrow(){return innerWidth<=760&&innerHeight>innerWidth;}
 function defaultQuad(){
   var W=innerWidth,Hh=innerHeight,x0=0,y1=Hh;
   if(mode==='open'){
-    if(innerWidth>760)x0=panel.offsetWidth+24;else y1=Hh-panel.offsetHeight-16;
-  }else if(mode==='rail'&&innerWidth>760)x0=84;
+    if(!narrow())x0=panel.offsetWidth+24;else y1=Hh-panel.offsetHeight-16;
+  }else if(mode==='rail'&&!narrow())x0=84;
   var aw=W-x0,w=Math.min(0.78*aw,0.78*y1*CAL_W/CAL_H),h=w*CAL_H/CAL_W,cx=x0+aw/2,cy=y1/2;
   return [[cx-w/2,cy-h/2],[cx+w/2,cy-h/2],[cx+w/2,cy+h/2],[cx-w/2,cy+h/2]];
 }
@@ -603,7 +604,7 @@ function refreshUI(){
 }
 function place(){
   var fb=16;
-  if(innerWidth<=760&&mode==='open')fb=panel.offsetHeight+24;
+  if(narrow()&&mode==='open')fb=panel.offsetHeight+24;
   document.documentElement.style.setProperty('--fb',fb+'px');
 }
 function setMode(m){
